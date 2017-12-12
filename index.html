@@ -1,14 +1,33 @@
 <html>
 <head>
 <title>永远的7日之都 日常模拟器</title>
-<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+<!--script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script-->
 <!--script type="text/javascript" src="http://code.jquery.com/jquery-1.7.0.min.js"></script-->
+<script type="text/javascript" src="jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="terminal.js"></script>
+<script type="text/javascript" src="7day_db.js"></script>
 <script type="text/javascript" src="7day_sim.js"></script>
 <script type="text/javascript">
+
+var sim, term;
+$(document).ready(function() {
+    sim = new sim7(db7);
+    term = new lineio($('div#term'));
+});
+
+var test1 = function() {
+    term.writeline(term.bindbackto($('<p>').text('hello world!'), function(ln, elm){console.log(ln, elm[0]);}));
+};
 
 </script>
 </head>
 <body>
-Test Page
+<h1>Test Page</h1>
+<p>test page</p>
+<div id='term'>
+</div>
+<div id='hndl'>
+<p onclick='test1();'>click</p>
+</div>
 </body>
 </html>
