@@ -1,5 +1,6 @@
 
 var sim7 = (function() {
+    
     function sim7(db) {
         this.db = db;
         this.exec_line = [];
@@ -81,7 +82,112 @@ var sim7 = (function() {
     };
     sim7.prototype.emit = function(cmd) {
     };
+    sim7.prototype._rdc = function(hndl, cmd, cnt = 1) {
+        if(!('idx' in hndl)) hndl['idx'] = 0;
+        var ridx = 0;
+        var r = '';
+        while(ridx < cnt) {
+            if(hndl['idx'] >= cmd.length) break;
+            r += cmd[hndl['idx']++];
+            ridx ++;
+        }
+        return r;
+    };
+    sim7.prototype._lac = function(hndl, cmd, cnt = 1) {
+        if(!('idx' in hndl)) hndl['idx'] = 0;
+        var ridx = 0;
+        var cidx = hndl['idx'];
+        var r = '';
+        while(ridx < cnt) {
+            if(cidx >= cmd.length) break;
+            r += cmd[cidx++];
+            ridx ++;
+        }
+        return r;
+    };
+    sim7.prototype._rdc_digit = function(hndl, cmd) {
+        var c = ''
+        while(this._lac(hndl, cmd) && this._lac(hndl, cmd) >= '0' && this._lac(hndl, cmd) <= '9') {
+            c += this._rdc(hndl, cmd);
+        }
+        c = parseInt(c);
+        return c
+    };
     sim7.prototype.exec = function(cmd) {
+        var ec = new exec_cmd(this);
+        var hndl = {};
+        var c;
+        var stat = 'idle';
+        while(c = this._lac(hndl, cmd)) {
+            if(c == '"') {
+                c = this._rdc(hndl, cmd);
+                var cmt = ''
+                while((c = this._rdc(hndl, cmd)) != '"') {
+                    if(!c) return ec.err();
+                    cmt += c;
+                }
+                ec.append('cmt', cmt, '');
+                continue;
+            }
+            if(stat == 'idle') {
+                c = this._rdc(hndl, cmd);
+                if(c == 'p') {
+                    ec.emit('act', 'patrol');
+                    stat = 'aft_act';
+                } else if(c == 'c') {
+                    ec.emit('act', 'construction');
+                    stat = 'aft_cons';
+                } else if(c == 'd') {
+                    ec.emit('act', 'develop');
+                    stat = 'aft_act';
+                } else if(c == 'b') {
+                    ec.emit('act', 'battle');
+                    stat = 'aft_act';
+                } else if(c == 'w') {
+                    ec.emit('act', 'wast');
+                    stat = 'done';
+                } else {
+                    return ec.err();
+                }
+            } else if(stat == 'aft_act' || stat == 'aft_cons') {
+                c = this._rdc_digit(hndl, cmd);
+                if(!isNaN(c)) {
+                    var pos = this.db.position[c];
+                    if(!pos) return ec.err();
+                    ec.emit('pos', pos);
+                }
+                if(stat == 'aft_cons') {
+                    stat = 'aft_cons_pos';
+                } else {
+                    stat = 'done';
+                }
+            } else if(stat == 'aft_cons_pos') {
+                c = this._rdc(hndl, cmd);
+                var _obj;
+                if(c == 'f') {
+                    _obj = this.db.construction.force;
+                } else if(c == 't') {
+                    _obj = this.db.construction.tech;
+                } else if(c == 'i') {
+                    _obj = this.db.construction.info;
+                } else if(c == 's') {
+                    _obj = this.db.construction.spec;
+                }
+                c = this._rdc_digit(hndl, cmd);
+                if(_obj && !isNaN(c)) {
+                    var obj = Object.keys(_obj)[c];
+                    if(!obj) return ec.err();
+                    ec.emit('cons', obj);
+                    stat = 'done';
+                }
+            } else {
+                return ec.err();
+            }
+        }
+        if(stat != 'done') {
+            return ec.err();
+        }
+        return ec.exec('act');
     };
     sim7.prototype.run = function() {
         this.prop_buf = {};
@@ -93,5 +199,29 @@ var sim7 = (function() {
     };
     sim7.prototype.makelog = function() {
     };
+    
+    function exec_cmd(sim) {
+        this.sim = sim;
+        this.pool = {}
+    }
+    exec_cmd.prototype.emit = function(prop, val) {
+        this.pool[prop] = val;
+    };
+    exec_cmd.prototype.append = function(prop, val, init) {
+        if(!(prop in this.pool)) this.pool[prop] = init;
+        this.pool[prop] += val;
+    };
+    exec_cmd.prototype.exec = function(prop) {
+        var fn = 'exec_' + this.pool[prop];
+        return this[fn].apply(this, arguments);
+    };
+    exec_cmd.prototype.err = function() {
+        return 'err';
+    };
+    
+    exec_cmd.prototype.exec_patrol = function() {
+        return this;
+    };
+    
     return sim7;
 })();
