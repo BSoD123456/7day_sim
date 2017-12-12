@@ -55,7 +55,7 @@ var sim7 = (function() {
         this.inc_num('dev', pos);
     };
     sim7.prototype._get_prop_in_pos = function(prop, pos) {
-        if(!(pos in this.prop_buf && prop in this.prop_buf[pos])) return null;
+        if(!(pos in this.prop_buf && prop in this.prop_buf[pos])) return 0;
         return this.prop_buf[pos][prop];
     };
     sim7.prototype.get_prop = function(prop, pos = null) {
@@ -63,8 +63,7 @@ var sim7 = (function() {
             var r = 0;
             for(var p in this.prop_buf) {
                 if(p == 'global') continue;
-                var v = this._get_prop_in_pos(prop, p);
-                if(v !== null) r += v;
+                r += this._get_prop_in_pos(prop, p);
             }
             return r;
         } else {
@@ -198,9 +197,7 @@ var sim7 = (function() {
     };
     
     sim7.prototype.time = function() {
-        var r = this.get_prop('time', 'global');
-        if(!r) r = 0;
-        return r;
+        return this.get_prop('time', 'global');
     };
     sim7.prototype.day = function() {
         return 7 - Math.floor(this.time() / 12);
