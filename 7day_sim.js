@@ -125,7 +125,8 @@ var sim7 = (function() {
                 ec.append('cmt', cmt, '');
                 continue;
             }
-            if(stat == 'idle') {
+            if(stat == 'idle' || stat == 'request') {
+                var ostat = stat;
                 c = this._rdc(hndl, cmd);
                 if(c == 'p') {
                     ec.emit('act', 'patrol');
@@ -145,8 +146,16 @@ var sim7 = (function() {
                 } else if(c == 'w') {
                     ec.emit('act', 'wast');
                     stat = 'done';
+                } else if(c == 'm') {
+                    ec.emit('act', 'comment');
+                    stat = 'done';
+                } else if(c == 'r') {
+                    stat = 'request';
                 } else {
                     return ec.err();
+                }
+                if(ostat == 'request') {
+                    ec.append('act', '_req', '');
                 }
             } else if(stat == 'aft_act' || stat == 'aft_cons') {
                 c = this._rdc_digit(hndl, cmd);
@@ -177,6 +186,7 @@ var sim7 = (function() {
                     var obj = Object.keys(_obj)[c];
                     if(!obj) return ec.err();
                     ec.emit('cons', obj);
+                    ec.emit('cons_db', _obj[obj]);
                     stat = 'done';
                 }
             } else {
@@ -242,9 +252,10 @@ var sim7 = (function() {
         return !('err' in this.pool);
     };
     exec_cmd.prototype.exec_err = function() {
-        return 'err';
+        return {
+            act: 'err',
+        };
     };
-    
     
     exec_cmd.prototype._chk_pos_clear = function(pos) {
         var r = this.sim.get_prop('clear', pos);
@@ -318,6 +329,17 @@ var sim7 = (function() {
             cost: pc,
         };
     };
+    exec_cmd.prototype.exec_patrol_req = function() {
+        var pos = this.get('pos');
+        this._chk_pos_clear(pos);
+        var pi = this.sim.get_prop('patrol_idx', 'global');
+        var pc = this.sim.db.patrol[pi];
+        if(!pc) this.err();
+        return {
+            act: 'request',
+            req: this.get('act'),
+        };
+    };
     exec_cmd.prototype.exec_develop = function() {
         var pos = this.get('pos');
         this._chk_pos_clear(pos);
@@ -332,6 +354,16 @@ var sim7 = (function() {
             act: this.get('act'),
             pos: pos,
             cost: dc,
+        };
+    };
+    exec_cmd.prototype.exec_develop_req = function() {
+        var pos = this.get('pos');
+        this._chk_pos_clear(pos);
+        var di = this.sim.get_dev_num(pos);
+        if(di >= 8) this.err();
+        return {
+            act: 'request',
+            req: this.get('act'),
         };
     };
     exec_cmd.prototype.exec_battle = function() {
@@ -351,17 +383,96 @@ var sim7 = (function() {
         return {
             act: this.get('act'),
             pos: pos,
+            idx: bi,
+        };
+    };
+    exec_cmd.prototype.exec_battle_req = function() {
+        var pos = this.get('pos');
+        this._chk_pos_battle(pos);
+        var bi = this.sim.get_prop('battle_idx', pos);
+        if(bi >= 6) this.err();
+        return {
+            act: 'request',
+            req: this.get('act'),
         };
     };
     exec_cmd.prototype.exec_clear = function() {
         var pos = this.get('pos');
-        this._chk_pos_battle(pos);
+        //this._chk_pos_battle(pos);
         if(this.noerr()) {
             this._clear_pos(pos);
         }
         return {
             act: this.get('act'),
             pos: pos,
+        };
+    };
+    exec_cmd.prototype.exec_clear_req = function() {
+        var pos = this.get('pos');
+        //this._chk_pos_battle(pos);
+        return {
+            act: 'request',
+            req: this.get('act'),
+        };
+    };
+    exec_cmd.prototype.exec_construction = function() {
+        var pos = this.get('pos');
+        var cons = this.get('cons');
+        var cons_db = this.get('cons_db');
+        var cost = cons_db.construct;
+        this._chk_pos_clear(pos);
+        var condi = cons_db.condi(this.sim, cons, pos);
+        if(!condi) this.err();
+        if(this.noerr()) {
+            var last_cons = this.sim.get_prop('last_cons', 'global');
+            if(last_cons) {
+                last_cons();
+            }
+            this.sim.set_prop('last_cons',
+                cons_db.effect.bind(null, 99, this.sim, cons, pos), 'global');
+            cons_db.effect(0, this.sim, cons, pos);
+        }
+        return {
+            act: this.get('act'),
+            pos: pos,
+            cons: cons,
+            cost: cost,
+        };
+    };
+    exec_cmd.prototype.exec_construction_req = function() {
+        var pos = this.get('pos');
+        var cons = this.get('cons');
+        var cons_db = this.get('cons_db');
+        var cost = cons_db.construct;
+        this._chk_pos_clear(pos);
+        var condi = cons_db.condi(this.sim, cons, pos);
+        if(!condi) this.err();
+        return {
+            act: 'request',
+            req: this.get('act'),
+        };
+    };
+    exec_cmd.prototype.exec_wast = function() {
+        this._pass_time();
+        return {
+            act: this.get('act'),
+        };
+    };
+    exec_cmd.prototype.exec_wast_req = function() {
+        return {
+            act: 'request',
+            req: this.get('act'),
+        };
+    };
+    exec_cmd.prototype.exec_comment = function() {
+        return {
+            act: this.get('act'),
+        };
+    };
+    exec_cmd.prototype.exec_comment_req = function() {
+        return {
+            act: 'request',
+            req: this.get('act'),
         };
     };
     
