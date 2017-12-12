@@ -3,7 +3,7 @@ var sim7 = (function() {
     function sim7(db) {
         this.db = db;
         this.exec_line = [];
-        this.position_info = {};
+        this.comments = {};
         this.prop_buf = {};
 	}
     sim7.prototype.time = function() {
@@ -81,8 +81,13 @@ var sim7 = (function() {
     };
     sim7.prototype.emit = function(cmd) {
     };
-    sim7.prototype.exec = function() {
-        
+    sim7.prototype.exec = function(cmd) {
+    };
+    sim7.prototype.run = function() {
+        this.prop_buf = {};
+        for(var i = 0; i < this.exec_line.length; i++) {
+            this.exec(this.exec_line[i]);
+        }
     };
     sim7.prototype.backto = function(time) {
     };

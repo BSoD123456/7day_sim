@@ -5,24 +5,18 @@ var hashcoder = (function() {
     
     return {
         encode: function(s) {
-            var uarr = new TextEncoder().encode(s);
-            var comp_uarr = pako.deflate(uarr);
-            var r, src_uarr;
-            if(comp_uarr.length < uarr.length) {
-                r = COMP_HD;
-                src_uarr = comp_uarr;
+            var h = Base64.encode(s);
+            var comp_s = String.fromCharCode.apply(null, pako.deflate(s));
+            var comp_h = Base64.encode(comp_s);
+            if(comp_h.length < h.length) {
+                return COMP_HD + comp_h;
             } else {
-                r = '';
-                src_uarr = uarr;
+                return h
             }
-            //r += btoa(unescape(encodeURIComponent(new TextDecoder('utf-8').decode(src_uarr))));
-            r += Base64.encode(new TextDecoder('utf-8').decode(src_uarr));
-            return r;
         },
         decode: function(h) {
             if(h[0] == COMP_HD) {
-                var src_uarr = new TextEncoder().encode(Base64.decode(h.slice(1)));
-                src_uarr = pako.inflate(src_uarr);
+                var src_uarr = pako.inflate(Base64.decode(h.slice(1)));
                 return new TextDecoder('utf-8').decode(src_uarr);
             } else {
                 return Base64.decode(h);
