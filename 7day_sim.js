@@ -7,19 +7,12 @@ var sim7 = (function() {
         this.comments = {};
         this.prop_buf = {};
 	}
-    sim7.prototype.time = function() {
-        return this.exec_line.length;
-    };
-    sim7.prototype.day = function() {
-        return 7 - Math.floor(this.time() / 12);
-    };
-    sim7.prototype.act_point = function() {
-        return 24 - (this.time() % 12) * 2;
-    };
     sim7.prototype._get_num_in_pos_by_cons = function(cons, pos) {
+        if(!('cons_num' in this.prop_buf[pos] && cons in this.prop_buf[pos]['cons_num'])) return 0;
         return this.prop_buf[pos]['cons_num'][cons];
     };
     sim7.prototype._get_num_in_pos = function(cons = null, pos) {
+        if(!(pos in this.prop_buf)) return 0;
         if(cons === null) {
             var r = 0;
             for(var c in this.prop_buf[pos]['cons_num']) {
@@ -35,7 +28,8 @@ var sim7 = (function() {
         if(pos === null) {
             var r = 0;
             for(var p in this.prop_buf) {
-                r += this._get_num_in_pos(cons, pos);
+                if(p == 'global') continue;
+                r += this._get_num_in_pos(cons, p);
             }
             return r;
         } else {
@@ -61,13 +55,16 @@ var sim7 = (function() {
         this.inc_num('dev', pos);
     };
     sim7.prototype._get_prop_in_pos = function(prop, pos) {
+        if(!(pos in this.prop_buf && prop in this.prop_buf[pos])) return null;
         return this.prop_buf[pos][prop];
     };
     sim7.prototype.get_prop = function(prop, pos = null) {
         if(pos === null) {
             var r = 0;
             for(var p in this.prop_buf) {
-                r += this._get_prop_in_pos(prop, p);
+                if(p == 'global') continue;
+                var v = this._get_prop_in_pos(prop, p);
+                if(v !== null) r += v;
             }
             return r;
         } else {
@@ -200,6 +197,18 @@ var sim7 = (function() {
     sim7.prototype.makelog = function() {
     };
     
+    sim7.prototype.time = function() {
+        var r = this.get_prop('time', 'global');
+        if(!r) r = 0;
+        return r;
+    };
+    sim7.prototype.day = function() {
+        return 7 - Math.floor(this.time() / 12);
+    };
+    sim7.prototype.act_point = function() {
+        return 24 - (this.time() % 12) * 2;
+    };
+    
     function exec_cmd(sim) {
         this.sim = sim;
         this.pool = {}
@@ -211,15 +220,44 @@ var sim7 = (function() {
         if(!(prop in this.pool)) this.pool[prop] = init;
         this.pool[prop] += val;
     };
-    exec_cmd.prototype.exec = function(prop) {
-        var fn = 'exec_' + this.pool[prop];
-        return this[fn].apply(this, arguments);
+    exec_cmd.prototype.get = function(prop) {
+        if(!(prop in this.pool)) {
+            this.err();
+            return null;
+        }
+        return this.pool[prop];
     };
-    exec_cmd.prototype.err = function() {
+    exec_cmd.prototype.exec = function(prop) {
+        if(prop != 'err' && 'err' in this.pool) return this.exec('err');
+        var fn = 'exec_' + this.pool[prop];
+        var r = this[fn].apply(this, arguments);
+        if(prop != 'err' && 'err' in this.pool) return this.exec('err');
+        return r;
+    };
+    exec_cmd.prototype.err = function(err = 'err') {
+        this.emit('err', err);
+        return this.exec('err');
+    };
+    exec_cmd.prototype.exec_err = function() {
         return 'err';
     };
     
+    
+    exec_cmd.prototype._chk_pos = function(prop, pos) {
+        var r = this.sim.get_prop(prop, pos);
+        if(!r) this.err();
+        return !!r;
+    };
+    exec_cmd.prototype._pass_time = function() {
+        var t = this.sim.time();
+        this.sim.set_prop('time', t + 1, 'global');
+        var ap = this.sim.act_point();
+        if(ap == 0) {
+            
+        }
+    };
     exec_cmd.prototype.exec_patrol = function() {
+        this._chk_pos('clear', this.get('pos'));
         return this;
     };
     
