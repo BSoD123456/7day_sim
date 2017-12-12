@@ -235,6 +235,9 @@ var sim7 = (function() {
         this.emit('err', err);
         return this.exec('err');
     };
+    exec_cmd.prototype.noerr = function() {
+        return !('err' in this.pool);
+    };
     exec_cmd.prototype.exec_err = function() {
         return 'err';
     };
@@ -250,12 +253,70 @@ var sim7 = (function() {
         this.sim.set_prop('time', t + 1, 'global');
         var ap = this.sim.act_point();
         if(ap == 0) {
-            
+            this.sim.set_prop('patrol_idx', 0, 'global');
         }
     };
+    exec_cmd.prototype._cleear_pos = function(pos) {
+        this.sim.set_prop('batlle', false, pos);
+        this.sim.set_prop('clear', true, pos);
+        while(this.sim.get_dev_num(pos) < 4) {
+            this.sim.inc_dev_num(pos);
+        }
+    };
+    exec_cmd.prototype._battle_pos = function(pos) {
+        this.sim.set_prop('batlle', true, pos);
+    };
+    
     exec_cmd.prototype.exec_patrol = function() {
-        this._chk_pos('clear', this.get('pos'));
-        return this;
+        var pos = this.get('pos');
+        this._chk_pos('clear', pos);
+        var pi = this.sim.get_prop('patrol_idx', 'global');
+        var pc = this.sim.db.patrol[pi];
+        if(!pc) this.err();
+        if(this.noerr()) {
+            this.sim.set_prop('patrol_idx', pi + 1, 'global');
+            this._pass_time();
+        }
+        return {
+            act: this.get('act'),
+            pos: pos,
+            cost: pc,
+        };
+    };
+    exec_cmd.prototype.exec_develop = function() {
+        var pos = this.get('pos');
+        this._chk_pos('clear', pos);
+        var di = this.sim.get_dev_num(pos);
+        var dc = this.sim.db.develop[di];
+        if(di >= 8) this.err();
+        if(this.noerr()) {
+            this.sim.inc_dev_num(pos);
+            this._pass_time();
+        }
+        return {
+            act: this.get('act'),
+            pos: pos,
+            cost: dc,
+        };
+    };
+    exec_cmd.prototype.exec_battle = function() {
+        var pos = this.get('pos');
+        this._chk_pos('battle', pos);
+        var bi = this.sim.get_prop('battle_idx', pos);
+        if(bi >= 6) this.err();
+        if(this.noerr()) {
+            if(bi == 5) {
+                this._cleear_pos(pos);
+            } else {
+                this.sim.set_prop('battle_idx', di + 1, pos);
+            }
+            this._pass_time();
+        }
+        return {
+            act: this.get('act'),
+            pos: pos,
+            cost: pc,
+        };
     };
     
     return sim7;
