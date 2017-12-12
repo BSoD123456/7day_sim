@@ -243,10 +243,43 @@ var sim7 = (function() {
     };
     
     
-    exec_cmd.prototype._chk_pos = function(prop, pos) {
-        var r = this.sim.get_prop(prop, pos);
+    exec_cmd.prototype._chk_pos_clear = function(pos) {
+        var s = this.sim.get_prop('clear_score', pos);
+        var d = this.sim.db.battle[pos];
+        if(!d) {
+            this.err()
+            return false;
+        };
+        var r = (s >= d[0]);
+        if(r) {
+            while(this.sim.get_dev_num(pos) < 4) {
+                this.sim.inc_dev_num(pos);
+            }
+        } else {
+            this.err();
+        }
+        return r;
+    };
+    exec_cmd.prototype._chk_pos_battle = function(pos) {
+        var p = this.sim.get_prop('battle_pos', 'global');
+        var r = (p == pos);
         if(!r) this.err();
-        return !!r;
+        return r;
+    };
+    exec_cmd.prototype._clear_pos = function(pos) {
+        this.sim.set_prop('battle_pos', 0, 'global');
+        var d = this.sim.db.battle[pos];
+        if(!d) {
+            this.err()
+            return;
+        };
+        for(var i = 1; i < d.length; i++) {
+            var s = this.sim.get_prop('clear_score', d[i]);
+            this.sim.set_prop('clear_score', s + 1, d[i]);
+        }
+    };
+    exec_cmd.prototype._battle_pos = function(pos) {
+        this.sim.set_prop('batlle', true, pos);
     };
     exec_cmd.prototype._pass_time = function() {
         var t = this.sim.time();
@@ -256,20 +289,10 @@ var sim7 = (function() {
             this.sim.set_prop('patrol_idx', 0, 'global');
         }
     };
-    exec_cmd.prototype._cleear_pos = function(pos) {
-        this.sim.set_prop('batlle', false, pos);
-        this.sim.set_prop('clear', true, pos);
-        while(this.sim.get_dev_num(pos) < 4) {
-            this.sim.inc_dev_num(pos);
-        }
-    };
-    exec_cmd.prototype._battle_pos = function(pos) {
-        this.sim.set_prop('batlle', true, pos);
-    };
     
     exec_cmd.prototype.exec_patrol = function() {
         var pos = this.get('pos');
-        this._chk_pos('clear', pos);
+        this._chk_pos_clear(pos);
         var pi = this.sim.get_prop('patrol_idx', 'global');
         var pc = this.sim.db.patrol[pi];
         if(!pc) this.err();
@@ -285,7 +308,7 @@ var sim7 = (function() {
     };
     exec_cmd.prototype.exec_develop = function() {
         var pos = this.get('pos');
-        this._chk_pos('clear', pos);
+        this._chk_pos_clear(pos);
         var di = this.sim.get_dev_num(pos);
         var dc = this.sim.db.develop[di];
         if(di >= 8) this.err();
@@ -301,12 +324,12 @@ var sim7 = (function() {
     };
     exec_cmd.prototype.exec_battle = function() {
         var pos = this.get('pos');
-        this._chk_pos('battle', pos);
+        this._chk_pos_battle(pos);
         var bi = this.sim.get_prop('battle_idx', pos);
         if(bi >= 6) this.err();
         if(this.noerr()) {
             if(bi == 5) {
-                this._cleear_pos(pos);
+                this._clear_pos(pos);
             } else {
                 this.sim.set_prop('battle_idx', di + 1, pos);
             }
