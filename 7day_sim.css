@@ -1,0 +1,19 @@
+
+div.main_log {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+div.prop_log {
+    float: left;
+    margin-right: 10px;
+}
+
+div.prop_log:last-child {
+    float: none;
+    margin-right: 0;
+}
+
+div.prop_log span:first-child {
+    margin-right: 5px;
+}

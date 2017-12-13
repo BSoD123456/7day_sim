@@ -546,7 +546,7 @@ var sim7 = (function() {
         var force = this.get_db_prop('force');
         var tech = this.get_db_prop('tech');
         var info = this.get_db_prop('info');
-        elm.append($('<div>').append($('<span>').text("第" + day + "天")))
+        elm.append($('<div>').addClass('time_log').append($('<span>').text("第" + day + "天")))
             .append(this._makelog_prop("行动点", ap + '/24'))
             .append(this._makelog_prop("幻力", Math.ceil(force)))
             .append(this._makelog_prop("科技", Math.ceil(tech)))
