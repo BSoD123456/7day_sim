@@ -84,8 +84,7 @@ var db7 = (function() {
                             sim.set_prop('extra2_force',  0, pos);
                         } else if(phase == 'after1_local') {
                             sim.set_prop('extra1_force',
-                                sim.get_prop('extra1_force', pos)
-                                + sim.get_prop('base_force', pos) * 0.5,
+                                (sim.get_prop('extra1_force', pos) + sim.get_prop('base_force', pos)) * 0.5,
                                 pos);
                             return true;
                         }
