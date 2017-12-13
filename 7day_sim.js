@@ -39,7 +39,7 @@ var sim7 = (function() {
     sim7.prototype.get_dev_num = function(pos = null) {
         return this.get_num('dev', pos);
     };
-    sim7.prototype.inc_num = function(cons, pos) {
+    sim7.prototype.inc_num = function(cons, pos, step = 1) {
         if(!(pos in this.prop_buf)) {
             this.prop_buf[pos] = {};
         }
@@ -49,10 +49,10 @@ var sim7 = (function() {
         if(!(cons in this.prop_buf[pos]['cons_num'])) {
             this.prop_buf[pos]['cons_num'][cons] = 0;
         }
-        this.prop_buf[pos]['cons_num'][cons] ++;
+        this.prop_buf[pos]['cons_num'][cons] += step;
     };
-    sim7.prototype.inc_dev_num = function(pos) {
-        this.inc_num('dev', pos);
+    sim7.prototype.inc_dev_num = function(pos, step = 1) {
+        this.inc_num('dev', pos, step);
     };
     sim7.prototype._get_prop_in_pos = function(prop, pos) {
         if(!(pos in this.prop_buf && prop in this.prop_buf[pos])) return 0;
@@ -312,6 +312,26 @@ var sim7 = (function() {
             this.sim.set_prop('patrol_idx', 0, 'global');
         }
     };
+    exec_cmd.prototype._add_effect = function(effect, phase, pos) {
+        var pn = 'phase_stack_' + phase
+        var stck = this.sim.get_prop(pn, pos);
+        if(!stck) {
+            stck = [];
+            this.sim.set_prop(pn, stck, pos);
+        }
+        stck.push(effect);
+    };
+    exec_cmd.prototype._exec_effect = function(phase, pos) {
+        var pn = 'phase_stack_' + phase
+        var stck = this.sim.get_prop(pn, pos);
+        if(!stck) return;
+        for(var i = stck.length - 1; i >= 0; i--) {
+            if(stck[i]) {
+                var r = stck[i](phase);
+                if(!r) stck.splice(i, 1);
+            }
+        }
+    };
     
     exec_cmd.prototype.exec_patrol = function() {
         var pos = this.get('pos');
@@ -424,13 +444,32 @@ var sim7 = (function() {
         var condi = cons_db.condi(this.sim, cons, pos);
         if(!condi) this.err();
         if(this.noerr()) {
-            var last_cons = this.sim.get_prop('last_cons', 'global');
-            if(last_cons) {
-                last_cons();
+            var this_effect = function(){};
+            if('effect' in cons_db) {
+                this_effect = cons_db.effect.bind(null, this.sim, cons, pos);
             }
-            this.sim.set_prop('last_cons',
-                cons_db.effect.bind(null, 99, this.sim, cons, pos), 'global');
-            cons_db.effect(0, this.sim, cons, pos);
+            this._exec_effect('last1_global', 'global');
+            this._add_effect(this_effect, 'last1_global', 'global');
+            this._exec_effect('last1_local', pos);
+            this._add_effect(this_effect, 'last1_local', pos);
+            
+            this_effect('default');
+            this.sim.inc_num(cons, pos);
+            
+            this._add_effect(this_effect, 'after1_local', pos);
+            this._exec_effect('after1_local', pos);
+            this._add_effect(this_effect, 'after1_global', 'global');
+            this._exec_effect('after1_global', 'global');
+            
+            this._add_effect(this_effect, 'after2_local', pos);
+            this._exec_effect('after2_local', pos);
+            this._add_effect(this_effect, 'after2_global', 'global');
+            this._exec_effect('after2_global', 'global');
+            
+            this._exec_effect('last2_local', pos);
+            this._add_effect(this_effect, 'last2_local', pos);
+            this._exec_effect('last2_global', 'global');
+            this._add_effect(this_effect, 'last2_global', 'global');
         }
         return {
             act: this.get('act'),
