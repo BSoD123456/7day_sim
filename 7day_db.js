@@ -17,6 +17,9 @@ var db7 = (function() {
     };
 
     return {
+        method: {
+            get_prop: _get_prop,
+        },
         position: [
             "中央庭",
             "高校学园",
@@ -83,7 +86,7 @@ var db7 = (function() {
                             sim.set_prop('base_force',  sim.get_prop('base_force', pos) + 15, pos);
                             sim.set_prop('extra2_force',  0, pos);
                         } else if(phase == 'after1_local') {
-                            sim.set_prop('extra1_force',
+                            sim.set_prop('extra2_force',
                                 (sim.get_prop('extra1_force', pos) + sim.get_prop('base_force', pos)) * 0.5,
                                 pos);
                             return true;
@@ -95,18 +98,92 @@ var db7 = (function() {
                     condi: function(sim, cons, pos) {
                         return _chk_dev(sim, pos) && _chk_tech(sim, 30) && sim.get_num(cons) < 1;
                     },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_force',
+                            sim.get_prop('base_force', pos)
+                            + sim.get_prop('chara_num', 'global'),
+                            pos);
+                        }
+                    },
                 },
             },
             tech: {
                 "研究所": {
+                    construct: 10,
+                    condi: function(sim, cons, pos) {
+                        return _chk_dev(sim, pos);
+                    },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_tech',  sim.get_prop('base_tech', pos) + 5, pos);
+                        }
+                    },
                 },
                 "大型研究所": {
+                    construct: 14,
+                    condi: function(sim, cons, pos) {
+                        return _chk_dev(sim, pos) && _chk_tech(sim, 35);
+                    },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_tech',  sim.get_prop('base_tech', pos) + 10, pos);
+                        }
+                    },
                 },
                 "区立研究所": {
+                    construct: 14,
+                    condi: function(sim, cons, pos) {
+                        return _chk_dev(sim, pos) && _chk_tech(sim, 30) && sim.get_num(cons, pos) < 1
+                            && (sim.get_num("研究所", pos) + sim.get_num("大型研究所", pos)) >= 4;
+                    },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_tech',  sim.get_prop('base_tech', pos) + 5, pos);
+                            sim.set_prop('extra1_tech',  0, pos);
+                        } else if(phase == 'after1_local') {
+                            sim.set_prop('extra1_tech',
+                                sim.get_prop('extra1_tech', pos)
+                                + sim.get_num('研究所', pos),
+                                + sim.get_num('大型研究所', pos),
+                                + sim.get_num('区立研究所', pos),
+                                + sim.get_num('市立研究所', pos),
+                                //+ sim.get_num('公共图书馆', pos), // a calc bug in game
+                                pos);
+                            return true;
+                        }
+                    },
                 },
                 "市立研究所": {
+                    construct: 30,
+                    condi: function(sim, cons, pos) {
+                        return _chk_dev(sim, pos) && _chk_tech(sim, 60) && sim.get_num(cons) < 1;
+                    },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_tech',  sim.get_prop('base_tech', pos) + 15, pos);
+                            sim.set_prop('extra2_tech',  0, pos);
+                        } else if(phase == 'after1_local') {
+                            sim.set_prop('extra2_tech',
+                                (sim.get_prop('extra1_tech', pos) + sim.get_prop('base_tech', pos)) * 0.5,
+                                pos);
+                            return true;
+                        }
+                    },
                 },
                 "公共图书馆": {
+                    construct: 22,
+                    condi: function(sim, cons, pos) {
+                        return _chk_dev(sim, pos) && _chk_tech(sim, 30) && sim.get_num(cons) < 1;
+                    },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_tech',
+                            sim.get_prop('base_tech', pos)
+                            + sim.get_prop('chara_num', 'global'),
+                            pos);
+                        }
+                    },
                 },
                 "地下研究所": {
                     construct: 22,
@@ -122,14 +199,80 @@ var db7 = (function() {
             },
             info: {
                 "情报局": {
+                    construct: 10,
+                    condi: function(sim, cons, pos) {
+                        return _chk_dev(sim, pos);
+                    },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_info',  sim.get_prop('base_info', pos) + 5, pos);
+                        }
+                    },
                 },
                 "大型情报局": {
+                    construct: 14,
+                    condi: function(sim, cons, pos) {
+                        return _chk_dev(sim, pos) && _chk_tech(sim, 35);
+                    },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_info',  sim.get_prop('base_info', pos) + 10, pos);
+                        }
+                    },
                 },
                 "区立情报局": {
+                    construct: 14,
+                    condi: function(sim, cons, pos) {
+                        return _chk_dev(sim, pos) && _chk_tech(sim, 30) && sim.get_num(cons, pos) < 1
+                            && (sim.get_num("情报局", pos) + sim.get_num("大型情报局", pos)) >= 4;
+                    },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_info',  sim.get_prop('base_info', pos) + 5, pos);
+                            sim.set_prop('extra1_info',  0, pos);
+                        } else if(phase == 'after1_local') {
+                            sim.set_prop('extra1_info',
+                                sim.get_prop('extra1_info', pos)
+                                + sim.get_num('情报局', pos),
+                                + sim.get_num('大型情报局', pos),
+                                + sim.get_num('区立情报局', pos),
+                                + sim.get_num('市立情报局', pos),
+                                //+ sim.get_num('情报中心', pos), // a calc bug in game
+                                pos);
+                            return true;
+                        }
+                    },
                 },
                 "市立情报局": {
+                    construct: 30,
+                    condi: function(sim, cons, pos) {
+                        return _chk_dev(sim, pos) && _chk_tech(sim, 60) && sim.get_num(cons) < 1;
+                    },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_info',  sim.get_prop('base_info', pos) + 15, pos);
+                            sim.set_prop('extra2_info',  0, pos);
+                        } else if(phase == 'after1_local') {
+                            sim.set_prop('extra2_info',
+                                (sim.get_prop('extra1_info', pos) + sim.get_prop('base_info', pos)) * 0.5,
+                                pos);
+                            return true;
+                        }
+                    },
                 },
                 "情报中心": {
+                    construct: 22,
+                    condi: function(sim, cons, pos) {
+                        return _chk_dev(sim, pos) && _chk_tech(sim, 30) && sim.get_num(cons) < 1;
+                    },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_info',
+                            sim.get_prop('base_info', pos)
+                            + sim.get_prop('chara_num', 'global'),
+                            pos);
+                        }
+                    },
                 },
             },
             spec: {
