@@ -14,8 +14,8 @@
 
 var sim, term;
 $(document).ready(function() {
-    sim = new sim7(db7);
     term = new lineio($('div#term'));
+    sim = new sim7(db7, term);
 });
 
 var test1 = function() {

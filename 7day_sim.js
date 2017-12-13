@@ -1,8 +1,10 @@
 
 var sim7 = (function() {
     
-    function sim7(db) {
+    function sim7(db, term) {
         this.db = db;
+        this.term = term;
+        this.elm_if = new elm_if(this);
         this.exec_line = [];
         this.comments = {};
         this.prop_buf = {};
@@ -201,12 +203,15 @@ var sim7 = (function() {
     sim7.prototype.run = function() {
         this.prop_buf = {};
         for(var i = 0; i < this.exec_line.length; i++) {
-            this.exec(this.exec_line[i]);
+            var rprt = this.exec(this.exec_line[i]);
+            this.log(rprt);
         }
     };
     sim7.prototype.backto = function(time) {
     };
-    sim7.prototype.makelog = function() {
+    sim7.prototype.log = function(rprt) {
+        var elm = this.elm_if.makelog(rprt);
+        this.term.writeline(elm);
     };
     
     sim7.prototype.time = function() {
@@ -470,6 +475,10 @@ var sim7 = (function() {
             this._add_effect(this_effect, 'last2_local', pos);
             this._exec_effect('last2_global', 'global');
             this._add_effect(this_effect, 'last2_global', 'global');
+            
+            if(!this_effect('freeze_time')) {
+                this._pass_time();
+            }
         }
         return {
             act: this.get('act'),
@@ -513,6 +522,50 @@ var sim7 = (function() {
             act: 'request',
             req: this.get('act'),
         };
+    };
+    
+    function elm_if(sim) {
+        this.sim = sim;
+    }
+    elm_if.prototype.get_db_prop = function(prop, pos = null) {
+        return this.sim.db.method.get_prop(this.sim, prop, pos);
+    };
+    elm_if.prototype._makelog_prop = function(prop, val) {
+        var elm = $('<div>')
+            .addClass('prop_log')
+            .append(
+                $('<span>').text(prop))
+            .append(
+                $('<span>').text(val));
+        return elm
+    };
+    elm_if.prototype._makelog_glb = function() {
+        var elm = $('<div>').addClass('glb_log');
+        var day = this.sim.day();
+        var ap = this.sim.act_point();
+        var force = this.get_db_prop('force');
+        var tech = this.get_db_prop('tech');
+        var info = this.get_db_prop('info');
+        elm.append($('<div>').append($('<span>').text("第" + day + "天")))
+            .append(this._makelog_prop("行动点", ap + '/24'))
+            .append(this._makelog_prop("幻力", Math.ceil(force)))
+            .append(this._makelog_prop("科技", Math.ceil(tech)))
+            .append(this._makelog_prop("情报", Math.ceil(info)));
+        return elm;
+    };
+    elm_if.prototype._makelog_pos_item = function(pos) {
+        var elm = $('<div>').addClass('pos_item_log');
+    };
+    elm_if.prototype._makelog_pos = function() {
+        var elm = $('<div>').addClass('pos_log');
+    };
+    elm_if.prototype._makelog_exec = function(rprt) {
+        var elm = $('<div>').addClass('exec_log');
+    };
+    elm_if.prototype.makelog = function(rprt) {
+        var elm = $('<div>').addClass('main_log');
+        elm.append(this._makelog_glb());
+        return elm
     };
     
     return sim7;

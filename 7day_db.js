@@ -286,6 +286,8 @@ var db7 = (function() {
                             sim.set_prop('base_force',  sim.get_prop('base_force', pos) + 5, pos);
                             sim.set_prop('base_tech',  sim.get_prop('base_tech', pos) + 5, pos);
                             sim.set_prop('base_info',  sim.get_prop('base_info', pos) + 5, pos);
+                        } else if(phase == 'freeze_time') {
+                            return true;
                         }
                     },
                 },
