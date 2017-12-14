@@ -59,24 +59,28 @@ var controller = (function() {
         this.ctrl_elm.append(this.info_elm).append(this.hndl_elm);
         this.request();
 	}
+    controller.prototype.scrollhere = function() {
+        var top = this.ctrl_elm.offset().top;
+        $(window).scrollTop(top);
+    };
     controller.prototype.request = function() {
         var req = this.conf.req(this, this.stat);
         this.hndl_elm.empty();
         for(var i = 0; i < req.length; i ++) {
             var itm = req[i];
-            itm.elem.off();
-            itm.elem.on('click', this.choose.bind(this, itm));
+            itm.elem.find('.controller_req').addBack('.controller_req').off();
+            itm.elem.find('.controller_req').addBack('.controller_req').on('click', this.choose.bind(this, itm));
             itm.elem.removeClass('controller_info_item');
             itm.elem.addClass('controller_hndl_item');
             this.hndl_elm.append(itm.elem);
         }
+        this.scrollhere();
     };
     controller.prototype.context = function(n) {
         return this.info_stack[this.info_stack.length - 1 - n];
     };
     controller.prototype.go_stat = function(stat) {
         if(stat in this.stat_wrapper) {
-            //this.info_stack = this.info_stack.slice(0, this.stat_wrapper[stat]);
             var stck_wp = this.stat_wrapper[stat];
             if(stck_wp > this.info_stack.length) {
                 this.stat_wrapper[stat] = this.info_stack.length;
@@ -93,16 +97,17 @@ var controller = (function() {
         this.request();
     };
     controller.prototype.choose = function(itm) {
-        itm.elem.off();
-        itm.elem.on('click', this.go_stat.bind(this, this.stat));
+        itm.elem.find('.controller_req').addBack('.controller_req').off();
+        itm.elem.find('.controller_req').addBack('.controller_req').on('click', this.go_stat.bind(this, this.stat));
         itm.elem.removeClass('controller_hndl_item');
         itm.elem.addClass('controller_info_item');
         this.info_elm.append(itm.elem);
         this.info_stack.push(itm.info);
-        if(itm.func) {
-            itm.func();
+        var next = itm.next;
+        if(next instanceof Function) {
+            next = itm.next();
         }
-        this.go_stat(itm.next);
+        this.go_stat(next);
     };
     return controller;
 })();

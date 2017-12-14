@@ -612,6 +612,7 @@ var sim7 = (function() {
         if(!this.sim.check(cmd)) return null;
         return function() {
             self.sim.emit(cmd);
+            return 'idle';
         };
     };
     ctrl_if.prototype.spanelm = function() {
@@ -632,8 +633,7 @@ var sim7 = (function() {
             if(_func) r.push({
                 elem: this.spanelm().text("空闲"),
                 info: 'wast',
-                next: 'idle',
-                func: _func,
+                next: _func,
             });
             r.push({
                 elem: this.spanelm().text("备注"),
@@ -646,8 +646,7 @@ var sim7 = (function() {
             if(_func) r.push({
                 elem: this.spanelm().text("巡查"),
                 info: 'patrol',
-                next: 'idle',
-                func: _func,
+                next:  _func,
             });
             r.push({
                 elem: this.spanelm().text("建设"),
@@ -658,24 +657,24 @@ var sim7 = (function() {
             if(_func) r.push({
                 elem: this.spanelm().text("开发"),
                 info: 'develop',
-                next: 'idle',
-                func: _func,
+                next: _func,
             });
             var _func = this.cmdfunc('b' + pos_num);
             if(_func) r.push({
                 elem: this.spanelm().text("战斗"),
                 info: 'battle',
-                next: 'idle',
-                func: _func,
+                next: _func,
             });
             var _func = this.cmdfunc('l' + pos_num);
             if(_func) r.push({
                 elem: this.spanelm().text("强制解锁"),
                 info: 'clear',
-                next: 'idle',
-                func: _func,
+                next: _func,
             });
         } else if(stat == 'construct') {
+        } else if(stat == 'input_text') {
+            var text_elm = $('<input type="text">')
+            //var button_elem = $('
         }
         return r;
     };
