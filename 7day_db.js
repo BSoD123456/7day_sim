@@ -72,9 +72,9 @@ var db7 = (function() {
                         } else if(phase == 'after1_local') {
                             sim.set_prop('extra1_force',
                                 sim.get_prop('extra1_force', pos)
-                                + sim.get_num('工程厅', pos),
-                                + sim.get_num('大型工程厅', pos),
-                                + sim.get_num('区立工程大厦', pos),
+                                + sim.get_num('工程厅', pos)
+                                + sim.get_num('大型工程厅', pos)
+                                + sim.get_num('区立工程大厦', pos)
                                 + sim.get_num('市立工程大厦', pos),
                                 //+ sim.get_num('黑门监测站', pos), // a calc bug in game
                                 pos);
@@ -150,9 +150,9 @@ var db7 = (function() {
                         } else if(phase == 'after1_local') {
                             sim.set_prop('extra1_tech',
                                 sim.get_prop('extra1_tech', pos)
-                                + sim.get_num('研究所', pos),
-                                + sim.get_num('大型研究所', pos),
-                                + sim.get_num('区立研究所', pos),
+                                + sim.get_num('研究所', pos)
+                                + sim.get_num('大型研究所', pos)
+                                + sim.get_num('区立研究所', pos)
                                 + sim.get_num('市立研究所', pos),
                                 //+ sim.get_num('公共图书馆', pos), // a calc bug in game
                                 pos);
@@ -239,9 +239,9 @@ var db7 = (function() {
                         } else if(phase == 'after1_local') {
                             sim.set_prop('extra1_info',
                                 sim.get_prop('extra1_info', pos)
-                                + sim.get_num('情报局', pos),
-                                + sim.get_num('大型情报局', pos),
-                                + sim.get_num('区立情报局', pos),
+                                + sim.get_num('情报局', pos)
+                                + sim.get_num('大型情报局', pos)
+                                + sim.get_num('区立情报局', pos)
                                 + sim.get_num('市立情报局', pos),
                                 //+ sim.get_num('情报中心', pos), // a calc bug in game
                                 pos);
@@ -347,7 +347,7 @@ var db7 = (function() {
                 },
                 "其他": {
                     construct: 0,
-                    condi: function() {
+                    condi: function(sim, cons, pos) {
                         return _chk_dev(sim, pos);
                     },
                 },

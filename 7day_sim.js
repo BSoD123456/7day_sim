@@ -741,6 +741,41 @@ var sim7 = (function() {
                 next: _func,
             });
         } else if(stat == 'construct') {
+            r.push({
+                elem: this.spanelm().text("幻力"),
+                info: ['force', 'f'],
+                next: 'construct2',
+            });
+            r.push({
+                elem: this.spanelm().text("科技"),
+                info: ['tech', 't'],
+                next: 'construct2',
+            });
+            r.push({
+                elem: this.spanelm().text("情报"),
+                info: ['info', 'i'],
+                next: 'construct2',
+            });
+            r.push({
+                elem: this.spanelm().text("特别"),
+                info: ['spec', 's'],
+                next: 'construct2',
+            });
+        } else if(stat == 'construct2') {
+            var pos_num = ctrl.context(2);
+            var cons_type_info = ctrl.context(0);
+            var cons_type = cons_type_info[0];
+            var cons_type_cmd = cons_type_info[1];
+            var cons_list = Object.keys(this.sim.db.construction[cons_type])
+            for(var i = 0; i < cons_list.length; i++) {
+                var cons = cons_list[i];
+                var _func = this.cmdfunc('c' + pos_num + cons_type_cmd + i);
+                if(_func) r.push({
+                    elem: this.spanelm().text(cons),
+                    info: i,
+                    next: _func,
+                });
+            }
         } else if(stat == 'comment') {
             var text_elm = $('<input type="text">')
             var button_elem = $('<span>').addClass('controller_req').text("确定");
@@ -750,13 +785,13 @@ var sim7 = (function() {
                 self.sim.emit('m"' + text +'"');
                 return 'idle';
             }
-            return [{
+            r.push({
                 elem: $('<span>').append(text_elm).append(button_elem),
                 info: 'text',
                 next: _func,
-            }];
+            });
         } else if(stat == 'setting') {
-            return [this.settingelm("神器使数量", 'chara_num')];
+            r.push(this.settingelm("神器使数量", 'chara_num'));
         }
         return r;
     };
