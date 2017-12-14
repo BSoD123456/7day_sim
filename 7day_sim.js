@@ -665,6 +665,7 @@ var sim7 = (function() {
         return $('<span>').addClass('controller_req');
     };
     ctrl_if.prototype.settingelm = function(name, prop) {
+        var self = this;
         var text_elm = $('<input type="text">')
         var button_elem = $('<span>').addClass('controller_req').text("确定");
         var _func = function() {
@@ -674,11 +675,11 @@ var sim7 = (function() {
             self.sim.reset();
             return 'idle';
         }
-        return [{
+        return {
             elem: $('<span>').append($('<span>').text(name)).append(text_elm).append(button_elem),
-            info: 'text',
+            info: prop,
             next: _func,
-        }];
+        };
     };
     ctrl_if.prototype.req = function(ctrl, stat) {
         var self = this;
@@ -755,7 +756,7 @@ var sim7 = (function() {
                 next: _func,
             }];
         } else if(stat == 'setting') {
-            
+            return [this.settingelm("神器使数量", 'chara_num')];
         }
         return r;
     };

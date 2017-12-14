@@ -15,6 +15,11 @@ var db7 = (function() {
         }
         return _get_prop(sim, 'tech') > val - 1; // for .5 round-up
     };
+    var _chara_num = function(sim) {
+        var num = sim.get_prop('chara_num', 'global');
+        if(num > 30) num = 30;
+        return num;
+    };
 
     return {
         method: {
@@ -103,7 +108,7 @@ var db7 = (function() {
                         if(phase == 'default') {
                             sim.set_prop('base_force',
                             sim.get_prop('base_force', pos)
-                            + sim.get_prop('chara_num', 'global'),
+                            + _chara_num(this.sim),
                             pos);
                         }
                     },
@@ -181,7 +186,7 @@ var db7 = (function() {
                         if(phase == 'default') {
                             sim.set_prop('base_tech',
                             sim.get_prop('base_tech', pos)
-                            + sim.get_prop('chara_num', 'global'),
+                            + _chara_num(this.sim),
                             pos);
                         }
                     },
@@ -270,7 +275,7 @@ var db7 = (function() {
                         if(phase == 'default') {
                             sim.set_prop('base_info',
                             sim.get_prop('base_info', pos)
-                            + sim.get_prop('chara_num', 'global'),
+                            + _chara_num(this.sim),
                             pos);
                         }
                     },
