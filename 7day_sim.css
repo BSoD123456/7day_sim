@@ -1,5 +1,6 @@
 
 div.main_log {
+    width: 500px;
     margin-top: 15px;
     margin-bottom: 15px;
 }
@@ -16,4 +17,8 @@ div.prop_log:last-child {
 
 div.prop_log span:first-child {
     margin-right: 5px;
+}
+
+span.backto_button {
+    float: right;
 }
