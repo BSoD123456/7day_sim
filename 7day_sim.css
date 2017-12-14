@@ -22,3 +22,11 @@ div.prop_log span:first-child {
 span.backto_button {
     float: right;
 }
+
+span.controller_req {
+    margin-right: 5px;
+}
+
+span.controller_req:last-child {
+    margin-right: 0;
+}

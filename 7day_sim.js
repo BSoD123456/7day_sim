@@ -1,15 +1,15 @@
 
 var sim7 = (function() {
     
-    function sim7(db, term) {
+    function sim7(db, term, ctrl) {
         this.db = db;
-        this.term = term;
+        this.term = new lineio(term);
+        this.ctrl = new controller(ctrl, new ctrl_if(this));
         this.elm_if = new elm_if(this);
         this.exec_line = ['l0', 'c0s0'];
-        this.exec_init_threshold = 2;
         this.comments = {};
         this.prop_buf = {};
-        this.run();
+        this.run(2);
 	}
     sim7.prototype._get_num_in_pos_by_cons = function(cons, pos) {
         if(!('cons_num' in this.prop_buf[pos] && cons in this.prop_buf[pos]['cons_num'])) return 0;
@@ -200,27 +200,47 @@ var sim7 = (function() {
         }
         return ec.exec('act');
     };
-    sim7.prototype.emit = function(cmd, cidx = 0) {
-        var rprt = this.exec(cmd);
-        if(cidx >= this.exec_init_threshold) {
-            this.log(rprt);
-        }
-        return rprt
+    sim7.prototype.check = function(cmd) {
+        var rprt = this.exec('r'+cmd);
+        return rprt.act == 'request';
     };
-    sim7.prototype.pushcmd = function(cmd) {
+    sim7.prototype.emit = function(cmd, silence = false) {
         this.exec_line.push(cmd);
-        return this.emit(cmd, this.exec_line.length - 1);
+        var cidx = this.exec_line.length - 1
+        var rprt = this.exec(cmd, cidx);
+        if(!silence) {
+            this.log(rprt, cidx);
+        }
+        return rprt;
     };
-    sim7.prototype.run = function() {
+    sim7.prototype.run = function(init = 0, fin = null) {
         this.prop_buf = {};
-        for(var i = 0; i < this.exec_line.length; i++) {
-            this.emit(this.exec_line[i], i);
+        if(fin === null || fin > this.exec_line.length) {
+            fin = this.exec_line.length;
+        }
+        for(var i = 0; i < fin; i++) {
+            var rprt = this.exec(this.exec_line[i], i);
+            if(i >= init) {
+                this.log(rprt, i);
+            }
         }
     };
-    sim7.prototype.backto = function(cidx) {
+    sim7.prototype.backto = function(rprt, cidx) {
+        console.log('backto', cidx);
+        this.run(cidx, cidx);
+        this.exec_line = this.exec_line.slice(0, cidx);
     };
-    sim7.prototype.log = function(rprt) {
+    sim7.prototype.log = function(rprt, cidx = null) {
+        if(cidx === null) {
+            cidx = this.term.lineno;
+        }
+        var self = this;
         var elm = this.elm_if.makelog(rprt);
+        var b2b = elm.find('span.backto_button');
+        var b2here = function(lineno, relm, elm) {
+            self.backto(rprt, cidx);
+        };
+        this.term.bindbackto(b2b, b2here);
         this.term.writeline(elm);
     };
     
@@ -232,14 +252,6 @@ var sim7 = (function() {
     };
     sim7.prototype.act_point = function() {
         return 24 - (this.time() % 12) * 2;
-    };
-    sim7.prototype.cidx = function(step = null) {
-        var cidx = this.get_prop('cidx', 'global');
-        if(step) {
-            cidx += step;
-            this.set_prop('cidx', cidx, 'global');
-        }
-        return cidx;
     };
     
     function exec_cmd(sim) {
@@ -441,7 +453,8 @@ var sim7 = (function() {
     };
     exec_cmd.prototype.exec_clear = function() {
         var pos = this.get('pos');
-        //this._chk_pos_battle(pos);
+        var clr = this.sim.get_prop('clear', pos)
+        if(clr) this.err();
         if(this.noerr()) {
             this._clear_pos(pos);
         }
@@ -452,7 +465,8 @@ var sim7 = (function() {
     };
     exec_cmd.prototype.exec_clear_req = function() {
         var pos = this.get('pos');
-        //this._chk_pos_battle(pos);
+        var clr = this.sim.get_prop('clear', pos)
+        if(clr) this.err();
         return {
             act: 'request',
             req: this.get('act'),
@@ -588,6 +602,82 @@ var sim7 = (function() {
         var elm = $('<div>').addClass('main_log');
         elm.append(this._makelog_glb());
         return elm
+    };
+    
+    function ctrl_if(sim) {
+        this.sim = sim;
+    }
+    ctrl_if.prototype.cmdfunc = function(cmd) {
+        var self = this;
+        if(!this.sim.check(cmd)) return null;
+        return function() {
+            self.sim.emit(cmd);
+        };
+    };
+    ctrl_if.prototype.spanelm = function() {
+        return $('<span>').addClass('controller_req');
+    };
+    ctrl_if.prototype.req = function(ctrl, stat) {
+        var r = [];
+        if(stat == 'idle') {
+            for(var i = 0; i < this.sim.db.position.length; i++) {
+                var pos = this.sim.db.position[i];
+                r.push({
+                    elem: this.spanelm().text(pos),
+                    info: i,
+                    next: 'in_pos',
+                });
+            }
+            var _func = this.cmdfunc('w');
+            if(_func) r.push({
+                elem: this.spanelm().text("空闲"),
+                info: 'wast',
+                next: 'idle',
+                func: _func,
+            });
+            r.push({
+                elem: this.spanelm().text("备注"),
+                info: 'comment',
+                next: 'input_text',
+            });
+        } else if(stat == 'in_pos') {
+            var pos_num = ctrl.context(0);
+            var _func = this.cmdfunc('p' + pos_num);
+            if(_func) r.push({
+                elem: this.spanelm().text("巡查"),
+                info: 'patrol',
+                next: 'idle',
+                func: _func,
+            });
+            r.push({
+                elem: this.spanelm().text("建设"),
+                info: 'construction',
+                next: 'construct',
+            });
+            var _func = this.cmdfunc('d' + pos_num);
+            if(_func) r.push({
+                elem: this.spanelm().text("开发"),
+                info: 'develop',
+                next: 'idle',
+                func: _func,
+            });
+            var _func = this.cmdfunc('b' + pos_num);
+            if(_func) r.push({
+                elem: this.spanelm().text("战斗"),
+                info: 'battle',
+                next: 'idle',
+                func: _func,
+            });
+            var _func = this.cmdfunc('l' + pos_num);
+            if(_func) r.push({
+                elem: this.spanelm().text("强制解锁"),
+                info: 'clear',
+                next: 'idle',
+                func: _func,
+            });
+        } else if(stat == 'construct') {
+        }
+        return r;
     };
     
     return sim7;

@@ -13,15 +13,9 @@
 <script type="text/javascript" src="7day_sim.js"></script>
 <script type="text/javascript">
 
-var sim, term;
 $(document).ready(function() {
-    term = new lineio($('div#term'));
-    sim = new sim7(db7, term);
+    sim = new sim7(db7, $('div#term'), $('div#ctrl'));
 });
-
-var test1 = function() {
-    term.writeline(term.bindbackto($('<p>').text('hello world!'), function(ln, elm){console.log(ln, elm[0]);}));
-};
 
 </script>
 </head>
@@ -30,8 +24,8 @@ var test1 = function() {
 <p>test page</p>
 <div id='term'>
 </div>
-<div id='hndl'>
-<p onclick='test1();'>click</p>
+<div id='ctrl'>
+<p>controller</p>
 </div>
 </body>
 </html>
