@@ -72,6 +72,7 @@ var controller = (function() {
             itm.elem.find('.controller_req').addBack('.controller_req').on('click', this.choose.bind(this, itm));
             itm.elem.removeClass('controller_info_item');
             itm.elem.addClass('controller_hndl_item');
+            itm.elem.addClass('controller_item');
             this.hndl_elm.append(itm.elem);
         }
         this.scrollhere();
@@ -101,6 +102,7 @@ var controller = (function() {
         itm.elem.find('.controller_req').addBack('.controller_req').on('click', this.go_stat.bind(this, this.stat));
         itm.elem.removeClass('controller_hndl_item');
         itm.elem.addClass('controller_info_item');
+        itm.elem.addClass('controller_item');
         this.info_elm.append(itm.elem);
         this.info_stack.push(itm.info);
         var next = itm.next;

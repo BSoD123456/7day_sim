@@ -27,6 +27,6 @@ span.controller_req {
     margin-right: 5px;
 }
 
-span.controller_req:last-child {
+span.controller_item:last-child {
     margin-right: 0;
 }

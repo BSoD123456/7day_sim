@@ -7,10 +7,23 @@ var sim7 = (function() {
         this.ctrl = new controller(ctrl, new ctrl_if(this));
         this.elm_if = new elm_if(this);
         this.exec_line = ['l0', 'c0s0'];
-        this.comments = {};
+        this.exec_init = 2;
         this.prop_buf = {};
-        this.run(2);
+        this.setting_init('chara_num', 15);
+        this.reset();
 	}
+    sim7.prototype.reset = function() {
+        this.term.backto(0);
+        this.run(this.exec_init);
+    };
+    sim7.prototype.push_init = function(cmd) {
+        this.exec_line.splice(this.exec_init, 0, cmd);
+        this.exec_init ++;
+    };
+    sim7.prototype.setting_init = function(prop, val) {
+        var text = encodeURIComponent(prop + ',' + val);
+        this.push_init('s"' + text +'"');
+    };
     sim7.prototype._get_num_in_pos_by_cons = function(cons, pos) {
         if(!('cons_num' in this.prop_buf[pos] && cons in this.prop_buf[pos]['cons_num'])) return 0;
         return this.prop_buf[pos]['cons_num'][cons];
@@ -151,6 +164,9 @@ var sim7 = (function() {
                 } else if(c == 'm') {
                     ec.emit('act', 'comment');
                     stat = 'done';
+                } else if(c == 's') {
+                    ec.emit('act', 'setting');
+                    stat = 'done';
                 } else if(c == 'r') {
                     stat = 'request';
                 } else {
@@ -226,7 +242,6 @@ var sim7 = (function() {
         }
     };
     sim7.prototype.backto = function(rprt, cidx) {
-        console.log('backto', cidx);
         this.run(cidx, cidx);
         this.exec_line = this.exec_line.slice(0, cidx);
     };
@@ -545,11 +560,42 @@ var sim7 = (function() {
         };
     };
     exec_cmd.prototype.exec_comment = function() {
+        var cmt = this.get('cmt');
         return {
             act: this.get('act'),
+            cmt: decodeURIComponent(cmt),
         };
     };
     exec_cmd.prototype.exec_comment_req = function() {
+        var cmt = this.get('cmt');
+        return {
+            act: 'request',
+            req: this.get('act'),
+        };
+    };
+    exec_cmd.prototype.exec_setting = function() {
+        var setting = this.get('cmt');
+        setting = decodeURIComponent(setting).split(',');
+        if(setting.length != 2) this.err();
+        var prop, val;
+        if(this.noerr()) {
+            prop = setting[0];
+            val = setting[1];
+            if(!isNaN(val)) {
+                val = parseFloat(val);
+            }
+            this.sim.set_prop(prop, val, 'global');
+        }
+        return {
+            act: this.get('act'),
+            prop: prop,
+            val: val,
+        };
+    };
+    exec_cmd.prototype.exec_setting_req = function() {
+        var setting = this.get('cmt');
+        setting = decodeURIComponent(setting).split(',');
+        if(setting.length != 2) this.err();
         return {
             act: 'request',
             req: this.get('act'),
@@ -618,7 +664,24 @@ var sim7 = (function() {
     ctrl_if.prototype.spanelm = function() {
         return $('<span>').addClass('controller_req');
     };
+    ctrl_if.prototype.settingelm = function(name, prop) {
+        var text_elm = $('<input type="text">')
+        var button_elem = $('<span>').addClass('controller_req').text("确定");
+        var _func = function() {
+            var val = text_elm.val();
+            if(!val) return 'setting';
+            self.sim.setting_init(prop, val);
+            self.sim.reset();
+            return 'idle';
+        }
+        return [{
+            elem: $('<span>').append($('<span>').text(name)).append(text_elm).append(button_elem),
+            info: 'text',
+            next: _func,
+        }];
+    };
     ctrl_if.prototype.req = function(ctrl, stat) {
+        var self = this;
         var r = [];
         if(stat == 'idle') {
             for(var i = 0; i < this.sim.db.position.length; i++) {
@@ -638,7 +701,12 @@ var sim7 = (function() {
             r.push({
                 elem: this.spanelm().text("备注"),
                 info: 'comment',
-                next: 'input_text',
+                next: 'comment',
+            });
+            r.push({
+                elem: this.spanelm().text("设置"),
+                info: 'setting',
+                next: 'setting',
             });
         } else if(stat == 'in_pos') {
             var pos_num = ctrl.context(0);
@@ -672,9 +740,22 @@ var sim7 = (function() {
                 next: _func,
             });
         } else if(stat == 'construct') {
-        } else if(stat == 'input_text') {
+        } else if(stat == 'comment') {
             var text_elm = $('<input type="text">')
-            //var button_elem = $('
+            var button_elem = $('<span>').addClass('controller_req').text("确定");
+            var _func = function() {
+                var text = encodeURIComponent(text_elm.val());
+                if(!text) return 'comment';
+                self.sim.emit('m"' + text +'"');
+                return 'idle';
+            }
+            return [{
+                elem: $('<span>').append(text_elm).append(button_elem),
+                info: 'text',
+                next: _func,
+            }];
+        } else if(stat == 'setting') {
+            
         }
         return r;
     };
