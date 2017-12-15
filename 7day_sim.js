@@ -6,7 +6,7 @@ var sim7 = (function() {
         this.term = new lineio(term);
         this.ctrl = new controller(ctrl, new ctrl_if(this));
         this.elm_if = new elm_if(this);
-        this.exec_line = ['l0', 'c0s0'];
+        this.exec_line = ['l0', 'c0s0', 'm"start"'];
         this.exec_init = 2;
         this.prop_buf = {};
         this.setting_init('chara_num', 15);
@@ -623,13 +623,18 @@ var sim7 = (function() {
         var elm = $('<div>')
             .addClass('time_log')
             .append(
-                $('<span>').text("第" + day + "天"))
+                $('<span>').text("第" + day + "天")
+                    .addClass('time_log_day'))
             .append(
-                $('<span>').text("行动点 " + ap + '/24'))
+                $('<span>').text("行动点 " + ap + '/24')
+                    .addClass('time_log_ap'))
             .append(
                 $('<span>').text("回到此时")
                     .addClass('backto_button')
                     .attr('time', this.sim.time()));
+        if(ap == 24) {
+            elm.find('span.time_log_day').addClass('time_log_day_start');
+        }
         return elm
     };
     elm_if.prototype._makelog_glb = function() {
@@ -650,11 +655,19 @@ var sim7 = (function() {
         var elm = $('<div>').addClass('pos_log');
     };
     elm_if.prototype._makelog_exec = function(rprt) {
-        var elm = $('<div>').addClass('exec_log');
+        var elm = this['_makelog_exec_' + rprt.act](rprt);
+        elm.addClass('exec_log');
+        return elm
+    };
+    elm_if.prototype._makelog_exec_comment = function(rprt) {
+        var elm = $('<div>').addClass('exec_log_comment');
+        elm.append($('<p>').append($('<span>').text("备注:")).append($('<span>').text(rprt.cmt)));
+        return elm;
     };
     elm_if.prototype.makelog = function(rprt) {
         var elm = $('<div>').addClass('main_log');
         elm.append(this._makelog_glb());
+        elm.append(this._makelog_exec(rprt));
         return elm
     };
     
