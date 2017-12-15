@@ -19,8 +19,13 @@ div.prop_log span:first-child {
     margin-right: 5px;
 }
 
+div.time_log span {
+    margin-right: 5px;
+}
+
 span.backto_button {
     float: right;
+    margin-right: 0;
 }
 
 span.controller_req {

@@ -614,25 +614,33 @@ var sim7 = (function() {
             .append(
                 $('<span>').text(prop))
             .append(
-                $('<span>').text(val));
+                $('<span>').text(Math.ceil(val)));
+        return elm
+    };
+    elm_if.prototype._makelog_time = function() {
+        var day = this.sim.day();
+        var ap = this.sim.act_point();
+        var elm = $('<div>')
+            .addClass('time_log')
+            .append(
+                $('<span>').text("第" + day + "天"))
+            .append(
+                $('<span>').text("行动点 " + ap + '/24'))
+            .append(
+                $('<span>').text("回到此时")
+                    .addClass('backto_button')
+                    .attr('time', this.sim.time()));
         return elm
     };
     elm_if.prototype._makelog_glb = function() {
         var elm = $('<div>').addClass('glb_log');
-        var day = this.sim.day();
-        var ap = this.sim.act_point();
         var force = this.get_db_prop('force');
         var tech = this.get_db_prop('tech');
         var info = this.get_db_prop('info');
-        elm.append($('<div>').addClass('time_log')
-                .append($('<span>').text("第" + day + "天"))
-                .append($('<span>').text("回到此时")
-                    .addClass('backto_button')
-                    .attr('time', this.sim.time())))
-            .append(this._makelog_prop("行动点", ap + '/24'))
-            .append(this._makelog_prop("幻力", Math.ceil(force)))
-            .append(this._makelog_prop("科技", Math.ceil(tech)))
-            .append(this._makelog_prop("情报", Math.ceil(info)));
+        elm.append(this._makelog_time())
+            .append(this._makelog_prop("幻力", force))
+            .append(this._makelog_prop("科技", tech))
+            .append(this._makelog_prop("情报", info));
         return elm;
     };
     elm_if.prototype._makelog_pos_item = function(pos) {
