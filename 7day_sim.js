@@ -5,7 +5,7 @@ var sim7 = (function() {
         this.db = db;
         this.term = new lineio(term);
         this.elm_if = new elm_if(this);
-        this.exec_line = ['l0', 'c0s0', 'm"start"'];
+        this.exec_line = ['l0', 'c0s0', 'm"' + encodeURIComponent('新的一周从这里开始') + '"'];
         this.exec_init = 2;
         this.prop_buf = {};
         this.setting_init('chara_num', 15);
