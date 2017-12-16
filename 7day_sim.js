@@ -56,6 +56,17 @@ var sim7 = (function() {
     sim7.prototype.get_dev_num = function(pos = null) {
         return this.get_num('dev', pos);
     };
+    sim7.prototype.get_cons_list = function(pos) {
+        if(!(pos in this.prop_buf) || !('cons_num' in this.prop_buf[pos])) return [];
+        var r = [];
+        for(var c in this.prop_buf[pos]['cons_num']) {
+            if(c == 'dev') continue;
+            if(this._get_num_in_pos_by_cons(c, pos) > 0) {
+                r.push(c);
+            }
+        }
+        return r;
+    };
     sim7.prototype.inc_num = function(cons, pos, step = 1) {
         if(!(pos in this.prop_buf)) {
             this.prop_buf[pos] = {};
@@ -424,6 +435,7 @@ var sim7 = (function() {
             act: this.get('act'),
             pos: pos,
             cost: dc,
+            idx: di,
         };
     };
     exec_cmd.prototype.exec_develop_req = function() {
@@ -631,10 +643,13 @@ var sim7 = (function() {
             .append(
                 $('<span>').text("回到此时")
                     .addClass('backto_button')
-                    .attr('time', this.sim.time()));
-        if(ap == 24) {
-            elm.find('span.time_log_day').addClass('time_log_day_start');
-        }
+                    .attr('time', this.sim.time()))
+            .append(
+                $('<span>').text("区域")
+                    .addClass('pos_button'))
+            .append(
+                $('<span>').text("属性")
+                    .addClass('prop_button'));
         return elm
     };
     elm_if.prototype._makelog_glb = function() {
@@ -642,32 +657,134 @@ var sim7 = (function() {
         var force = this.get_db_prop('force');
         var tech = this.get_db_prop('tech');
         var info = this.get_db_prop('info');
-        elm.append(this._makelog_time())
-            .append(this._makelog_prop("幻力", force))
+        elm.append(this._makelog_prop("幻力", force))
             .append(this._makelog_prop("科技", tech))
             .append(this._makelog_prop("情报", info));
         return elm;
     };
     elm_if.prototype._makelog_pos_item = function(pos) {
+        var cons_list = this.sim.get_cons_list(pos);
+        if(cons_list.length <= 0) return null;
         var elm = $('<div>').addClass('pos_item_log');
+        var force = this.get_db_prop('force', pos);
+        var tech = this.get_db_prop('tech', pos);
+        var info = this.get_db_prop('info', pos);
+        var prop_elm = $('<div>')
+            .append(this._makelog_prop("幻力", force))
+            .append(this._makelog_prop("科技", tech))
+            .append(this._makelog_prop("情报", info));
+        var cons_elm = $('<div>');
+        for(var i = 0; i < cons_list.length; i++) {
+            var cons = cons_list[i];
+            cons_elm.append(this._makelog_prop(cons, this.sim.get_num(cons, pos)));
+        }
+        elm.append($('<div>').text(pos))
+            .append(prop_elm)
+            .append(cons_elm);
+        return elm;
     };
     elm_if.prototype._makelog_pos = function() {
         var elm = $('<div>').addClass('pos_log');
+        for(var i = 0; i < this.sim.db.position.length; i++) {
+            var pos = this.sim.db.position[i];
+            var itm_elm = this._makelog_pos_item(pos);
+            if(itm_elm) {
+                elm.append(itm_elm);
+            }
+        }
+        return elm;
     };
     elm_if.prototype._makelog_exec = function(rprt) {
         var elm = this['_makelog_exec_' + rprt.act](rprt);
         elm.addClass('exec_log');
         return elm
     };
+    elm_if.prototype._exec_elm = function(name) {
+        return $('<div>').addClass('exec_log').append($('<span>').addClass('exec_log_act').text(name));
+    };
     elm_if.prototype._makelog_exec_comment = function(rprt) {
-        var elm = $('<div>').addClass('exec_log_comment');
-        elm.append($('<p>').append($('<span>').text("备注:")).append($('<span>').text(rprt.cmt)));
+        var elm = this._exec_elm("备注:")
+        elm.append($('<span>').text(rprt.cmt));
+        return elm;
+    };
+    elm_if.prototype._makelog_exec_patrol = function(rprt) {
+        var elm = this._exec_elm("巡查:")
+        elm.append($('<span>').text(rprt.pos))
+            .append($('<span>').text("需要" + rprt.cost + "点巡查力"));
+        return elm;
+    };
+    elm_if.prototype._makelog_exec_develop = function(rprt) {
+        var elm = this._exec_elm("开发:")
+        elm.append($('<span>').text(rprt.pos))
+            .append($('<span>').text("达到了" + (rprt.idx + 1) + "个空位"))
+            .append($('<span>').text("需要" + rprt.cost + "点研发力"));
+        return elm;
+    };
+    elm_if.prototype._makelog_exec_battle = function(rprt) {
+        var elm = this._exec_elm("战斗:")
+        elm.append($('<span>').text(rprt.pos))
+            .append($('<span>').text("完成了(" + (rprt.idx + 1) + "/6)场"));
+        return elm;
+    };
+    elm_if.prototype._makelog_exec_construction = function(rprt) {
+        var elm = this._exec_elm("建设:")
+        elm.append($('<span>').text(rprt.pos))
+            .append($('<span>').text("建成" + rprt.cons))
+            .append($('<span>').text("需要" + rprt.cost + "点建设力"));
+        return elm;
+    };
+    elm_if.prototype._makelog_exec_clear = function(rprt) {
+        var elm = this._exec_elm("强制解锁:")
+        elm.append($('<span>').text(rprt.pos));
+        return elm;
+    };
+    elm_if.prototype._makelog_exec_wast = function(rprt) {
+        var elm = this._exec_elm("发呆中");
+        return elm;
+    };
+    elm_if.prototype._makelog_exec_setting = function(rprt) {
+        var elm = this._exec_elm("设置调整:")
+        elm.append($('<span>').text(rprt.cmt));
+        return elm;
+    };
+    elm_if.prototype._makelog_exec_err = function(rprt) {
+        var elm = this._exec_elm("有什么位置出错了！");
         return elm;
     };
     elm_if.prototype.makelog = function(rprt) {
         var elm = $('<div>').addClass('main_log');
-        elm.append(this._makelog_glb());
-        elm.append(this._makelog_exec(rprt));
+        var time_elm = this._makelog_time();
+        var glb_elm = this._makelog_glb();
+        var pos_elm = this._makelog_pos();
+        var exec_elm = this._makelog_exec(rprt)
+        elm.append(time_elm)
+            .append(glb_elm)
+            .append(pos_elm)
+            .append(exec_elm);
+        if(this.sim.act_point() == 24) {
+            elm.addClass('day_start');
+        }
+        elm.addClass('act_' + rprt.act);
+        if(glb_elm.css('display') == 'none') console.log('hey');
+        elm.find('.prop_button').on('click', function() {
+            if(glb_elm.css('display') == 'none') {
+                glb_elm.removeClass('fold_hide');
+                glb_elm.addClass('fold_apear');
+            } else {
+                glb_elm.addClass('fold_hide');
+                glb_elm.removeClass('fold_apear');
+            }
+        });
+        pos_elm.addClass('fold_hide');
+        elm.find('.pos_button').on('click', function() {
+            if(pos_elm.css('display') == 'none') {
+                pos_elm.removeClass('fold_hide');
+                pos_elm.addClass('fold_apear');
+            } else {
+                pos_elm.addClass('fold_hide');
+                pos_elm.removeClass('fold_apear');
+            }
+        });
         return elm
     };
     

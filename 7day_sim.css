@@ -1,8 +1,21 @@
 
 div.main_log {
-    width: 500px;
+    width: 700px;
     margin-top: 15px;
     margin-bottom: 15px;
+}
+
+div.pos_item_log {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+div.pos_item_log:first-child {
+    margin-top: 10px;
+}
+
+div.pos_item_log:last-child {
+    margin-bottom: 10px;
 }
 
 div.prop_log {
@@ -27,9 +40,17 @@ div.time_log span {
     display: none;
 }
 
-.time_log_day_start {
+.day_start .time_log_day {
     /*display: initial;*/
     display: block;
+}
+
+span.prop_button {
+    float: right;
+}
+
+span.pos_button {
+    float: right;
 }
 
 span.backto_button {
@@ -37,8 +58,36 @@ span.backto_button {
     margin-right: 0;
 }
 
-.exec_log_comment span:first-child {
+.glb_log {
+    display: none;
+}
+
+.act_construction .glb_log {
+    display: initial;
+}
+
+.act_construction .glb_log.fold_hide {
+    display: none;
+}
+
+.exec_log_act {
     margin-right: 5px;
+}
+
+.exec_log span {
+    margin-right: 5px;
+}
+
+.exec_log span:last-child {
+    margin-right: 0;
+}
+
+.fold_apear {
+    display: initial;
+}
+
+.fold_hide {
+    display: none;
 }
 
 span.controller_req {
