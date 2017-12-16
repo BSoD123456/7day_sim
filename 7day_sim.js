@@ -775,10 +775,10 @@ var sim7 = (function() {
         var glb_elm = this._makelog_glb();
         var pos_elm = this._makelog_pos();
         var exec_elm = this._makelog_exec(rprt)
-        elm.append(glb_elm)
-            .append(pos_elm)
-            .append(exec_elm)
-            .append(time_elm);
+        elm.append(exec_elm)
+            .append(time_elm)
+            .append(glb_elm)
+            .append(pos_elm);
         if(this.sim.act_point() == 24) {
             elm.addClass('day_start');
         }
