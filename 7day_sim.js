@@ -5,16 +5,17 @@ var sim7 = (function() {
         this.db = db;
         this.term = new lineio(term);
         this.elm_if = new elm_if(this);
+        this.ctrl = new controller(ctrl, new ctrl_if(this));
         this.exec_line = ['l0', 'c0s0', 'm"' + encodeURIComponent('新的一周从这里开始') + '"'];
         this.exec_init = 2;
         this.prop_buf = {};
         this.setting_init('chara_num', 15);
         this.reset();
-        this.ctrl = new controller(ctrl, new ctrl_if(this));
     }
     sim7.prototype.reset = function() {
         this.term.backto(0);
         this.run(this.exec_init);
+        this.ctrl.request();
     };
     sim7.prototype.push_init = function(cmd) {
         this.exec_line.splice(this.exec_init, 0, cmd);
@@ -267,6 +268,7 @@ var sim7 = (function() {
     sim7.prototype.backto = function(rprt, cidx) {
         this.run(cidx, cidx);
         this.exec_line = this.exec_line.slice(0, cidx);
+        this.ctrl.request();
     };
     sim7.prototype.log = function(rprt, cidx = null) {
         if(cidx === null) {

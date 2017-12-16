@@ -57,7 +57,7 @@ var controller = (function() {
             'idle': 0,
         };
         this.ctrl_elm.append(this.info_elm).append(this.hndl_elm);
-        this.request();
+        //this.request();
 	}
     controller.prototype.scrollhere = function() {
         var top = this.ctrl_elm.offset().top;
