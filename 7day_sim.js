@@ -4,13 +4,13 @@ var sim7 = (function() {
     function sim7(db, term, ctrl) {
         this.db = db;
         this.term = new lineio(term);
-        this.ctrl = new controller(ctrl, new ctrl_if(this));
         this.elm_if = new elm_if(this);
         this.exec_line = ['l0', 'c0s0', 'm"start"'];
         this.exec_init = 2;
         this.prop_buf = {};
         this.setting_init('chara_num', 15);
         this.reset();
+        this.ctrl = new controller(ctrl, new ctrl_if(this));
 	}
     sim7.prototype.reset = function() {
         this.term.backto(0);
@@ -825,11 +825,13 @@ var sim7 = (function() {
         if(stat == 'idle') {
             for(var i = 0; i < this.sim.db.position.length; i++) {
                 var pos = this.sim.db.position[i];
-                r.push({
-                    elem: this.spanelm().text(pos),
-                    info: i,
-                    next: 'in_pos',
-                });
+                if(this.sim.check('p'+i) || this.sim.check('b'+i)) {
+                    r.push({
+                        elem: this.spanelm().text(pos),
+                        info: i,
+                        next: 'in_pos',
+                    });
+                }
             }
             var _func = this.cmdfunc('w');
             if(_func) r.push({
