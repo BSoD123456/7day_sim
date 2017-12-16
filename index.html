@@ -15,6 +15,9 @@
 
 $(document).ready(function() {
     sim = new sim7(db7, $('div#term'), $('div#ctrl'));
+    if(location.hash) {
+        sim.load(location.hash);
+    }
 });
 
 </script>

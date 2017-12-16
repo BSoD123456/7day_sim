@@ -24,6 +24,18 @@ var sim7 = (function() {
         var text = encodeURIComponent(prop + ',' + val);
         this.push_init('s"' + text +'"');
     };
+    sim7.prototype.save = function() {
+        var txt_exec = this.exec_line.join(',');
+        var hash = hashcoder.encode(this.exec_init + ':' + txt_exec);
+        return '#' + hash;
+    };
+    sim7.prototype.load = function(hash) {
+        var txt = hashcoder.decode(hash.slice(1));
+        var txt_arr = txt.split(':');
+        this.exec_init = parseInt(txt_arr[0]);
+        this.exec_line = txt_arr[1].split(',');
+        this.reset();
+    };
     sim7.prototype._get_num_in_pos_by_cons = function(cons, pos) {
         if(!('cons_num' in this.prop_buf[pos] && cons in this.prop_buf[pos]['cons_num'])) return 0;
         return this.prop_buf[pos]['cons_num'][cons];
@@ -849,6 +861,11 @@ var sim7 = (function() {
                 info: 'setting',
                 next: 'setting',
             });
+            r.push({
+                elem: this.spanelm().text("保存"),
+                info: 'save',
+                next: 'save',
+            });
         } else if(stat == 'in_pos') {
             var pos_num = ctrl.context(0);
             var _func = this.cmdfunc('p' + pos_num);
@@ -932,6 +949,14 @@ var sim7 = (function() {
             });
         } else if(stat == 'setting') {
             r.push(this.settingelm("神器使数量", 'chara_num'));
+        } else if(stat == 'save') {
+            var hashcode = this.sim.save();
+            var link_elm = $('<div>').append($('<a>').text('保存链接').attr('href', hashcode));
+            r.push({
+                elem: link_elm,
+                info: 'save',
+                next: 'save',
+            });
         }
         return r;
     };
