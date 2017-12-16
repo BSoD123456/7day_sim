@@ -673,7 +673,7 @@ var sim7 = (function() {
             .append(this._makelog_prop("幻力", force))
             .append(this._makelog_prop("科技", tech))
             .append(this._makelog_prop("情报", info));
-        var cons_elm = $('<div>');
+        var cons_elm = $('<div>').append(this._makelog_prop("总共", this.sim.get_dev_num(pos)));
         for(var i = 0; i < cons_list.length; i++) {
             var cons = cons_list[i];
             cons_elm.append(this._makelog_prop(cons, this.sim.get_num(cons, pos)));
