@@ -338,6 +338,12 @@ var db7 = (function() {
                     condi: function(sim, cons, pos) {
                         return _chk_dev(sim, pos) && _chk_tech(sim, 50) && sim.get_num(cons) < 1;
                     },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_force',  sim.get_prop('base_force', pos) + 5, pos);
+                            sim.set_prop('base_tech',  sim.get_prop('base_tech', pos) + 5, pos);
+                        }
+                    },
                 },
                 "深海潜艇": {
                     construct: 20,
