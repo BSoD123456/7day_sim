@@ -11,7 +11,7 @@ var sim7 = (function() {
         this.setting_init('chara_num', 15);
         this.reset();
         this.ctrl = new controller(ctrl, new ctrl_if(this));
-	}
+    }
     sim7.prototype.reset = function() {
         this.term.backto(0);
         this.run(this.exec_init);
@@ -294,7 +294,7 @@ var sim7 = (function() {
     
     function exec_cmd(sim) {
         this.sim = sim;
-        this.pool = {}
+        this.pool = {};
     }
     exec_cmd.prototype.emit = function(prop, val) {
         this.pool[prop] = val;
@@ -406,6 +406,9 @@ var sim7 = (function() {
         }
     };
     
+    exec_cmd.prototype.get_db_cost = function(prop, val) {
+        return this.sim.db.method.get_cost(this.sim, prop, val);
+    };
     exec_cmd.prototype.exec_patrol = function() {
         var pos = this.get('pos');
         this._chk_pos_clear(pos);
@@ -413,6 +416,7 @@ var sim7 = (function() {
         var pc = this.sim.db.patrol[pi];
         if(!pc) this.err();
         if(this.noerr()) {
+            pc = this.get_db_cost('patrol', pc);
             this.sim.set_prop('patrol_idx', pi + 1, 'global');
             this._pass_time();
         }
@@ -440,6 +444,7 @@ var sim7 = (function() {
         var dc = this.sim.db.develop[di];
         if(di >= 8) this.err();
         if(this.noerr()) {
+            dc = this.get_db_cost('develop', dc);
             this.sim.inc_dev_num(pos);
             this._pass_time();
         }
@@ -520,6 +525,7 @@ var sim7 = (function() {
         var condi = cons_db.condi(this.sim, cons, pos);
         if(!condi) this.err();
         if(this.noerr()) {
+            cost = this.get_db_cost('construct', cost);
             var this_effect = function(){};
             if('effect' in cons_db) {
                 this_effect = cons_db.effect.bind(null, this.sim, cons, pos);

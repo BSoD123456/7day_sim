@@ -6,6 +6,12 @@ var db7 = (function() {
         r += sim.get_prop('extra2_' + prop, pos);
         return r;
     };
+    var _get_cost = function(sim, prop, val) {
+        var r = sim.get_prop('base_' + prop, 'global');
+        r = val - r;
+        if(r < 0) r = 0;
+        return r;
+    };
     var _chk_dev = function(sim, pos) {
         return (sim.get_dev_num(pos) - sim.get_num(null, pos)) > 0;
     };
@@ -24,6 +30,7 @@ var db7 = (function() {
     return {
         method: {
             get_prop: _get_prop,
+            get_cost: _get_cost,
         },
         position: [
             "中央庭",
@@ -314,17 +321,32 @@ var db7 = (function() {
                     condi: function(sim, cons, pos) {
                         return _chk_dev(sim, pos) && _chk_tech(sim, 15) && sim.get_num(cons) < 4;
                     },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_patrol',  sim.get_prop('base_patrol', 'global') + 3, 'global');
+                        }
+                    },
                 },
                 "规划所": {
                     construct: 10,
                     condi: function(sim, cons, pos) {
                         return _chk_dev(sim, pos) && _chk_tech(sim, 15) && sim.get_num(cons) < 4;
                     },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_develop',  sim.get_prop('base_develop', 'global') + 3, 'global');
+                        }
+                    },
                 },
                 "起重机": {
                     construct: 10,
                     condi: function(sim, cons, pos) {
                         return _chk_dev(sim, pos) && _chk_tech(sim, 15) && sim.get_num(cons) < 4;
+                    },
+                    effect: function(sim, cons, pos, phase) {
+                        if(phase == 'default') {
+                            sim.set_prop('base_construct',  sim.get_prop('base_construct', 'global') + 3, 'global');
+                        }
                     },
                 },
                 "急救中心": {
