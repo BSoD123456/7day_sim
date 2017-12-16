@@ -860,6 +860,11 @@ var sim7 = (function() {
                 next: _func,
             });
             r.push({
+                elem: this.spanelm().text("强制解锁"),
+                info: ['clear', 'l'],
+                next: 'choose_pos',
+            });
+            r.push({
                 elem: this.spanelm().text("备注"),
                 info: 'comment',
                 next: 'comment',
@@ -874,6 +879,17 @@ var sim7 = (function() {
                 info: 'save',
                 next: 'save',
             });
+        } else if(stat == 'choose_pos') {
+            for(var i = 0; i < this.sim.db.position.length; i++) {
+                var pos = this.sim.db.position[i];
+                var last_act = ctrl.context(0);
+                var _func = this.cmdfunc(last_act[1] + i);
+                if(_func) r.push({
+                    elem: this.spanelm().text(pos),
+                    info: i,
+                    next: _func,
+                });
+            }
         } else if(stat == 'in_pos') {
             var pos_num = ctrl.context(0);
             var _func = this.cmdfunc('p' + pos_num);
@@ -897,12 +913,6 @@ var sim7 = (function() {
             if(_func) r.push({
                 elem: this.spanelm().text("战斗"),
                 info: 'battle',
-                next: _func,
-            });
-            var _func = this.cmdfunc('l' + pos_num);
-            if(_func) r.push({
-                elem: this.spanelm().text("强制解锁"),
-                info: 'clear',
                 next: _func,
             });
         } else if(stat == 'construct') {
