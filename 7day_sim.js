@@ -381,7 +381,7 @@ var sim7 = (function() {
         var t = this.sim.time();
         this.sim.set_prop('time', t + 1, 'global');
         var ap = this.sim.act_point();
-        if(ap == 0) {
+        if(ap == 24) {
             this.sim.set_prop('patrol_idx', 0, 'global');
         }
     };
