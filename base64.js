@@ -91,7 +91,7 @@ var Base64 = {
     ,_utf8_encode: function (string)
     {
         var utftext = "";
-        string = string.replace(/\r\n/g, "\n");
+        //string = string.replace(/\r\n/g, "\n");
 
         for (var n = 0; n < string.length; n++)
         {
